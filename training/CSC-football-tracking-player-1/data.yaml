@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 4
+names: ['ball', 'goalkeeper', 'player', 'referee']
+
+roboflow:
+  workspace: nycolasworkspace
+  project: csc-football-tracking-player
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/nycolasworkspace/csc-football-tracking-player/dataset/1
