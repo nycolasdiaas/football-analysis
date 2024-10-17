@@ -90,3 +90,4 @@ ultralytics-thop==2.0.9
 urllib3==2.2.3
 wcwidth==0.2.13
 webencodings==0.5.1
+mplsoccer==1.4.0
