@@ -30,7 +30,7 @@ class Tracker:
         batch_size = 20
         detections = []
         for i in range(0, len(frames), batch_size):
-            detections_batch = self.model.predict(frames[i:i+batch_size], conf=0.1)
+            detections_batch = self.model.predict(frames[i:i+batch_size], conf=0.10)
             detections += detections_batch
         return detections
     
@@ -89,7 +89,7 @@ class Tracker:
         if stub_path is not None:
             with open(stub_path, 'wb') as f:
                 pickle.dump(tracks, f)
-                
+                1
         return tracks
     
     def draw_ellipse(self, frame, bbox, color, track_id):
@@ -151,22 +151,29 @@ class Tracker:
 
         return frame
 
-    def draw_team_ball_control(self,frame,frame_num,team_ball_control):
-        # Draw a semi-transparent rectaggle 
+    def draw_team_ball_control(self, frame, frame_num, team_ball_control):
+        # Desenha um retângulo semi-transparente
         overlay = frame.copy()
-        cv2.rectangle(overlay, (1350, 850), (1900,970), (255,255,255), -1 )
+        cv2.rectangle(overlay, (1350, 850), (1900, 970), (255, 255, 255), -1)
         alpha = 0.4
         cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
 
-        team_ball_control_till_frame = team_ball_control[:frame_num+1]
-        # Get the number of time each team had ball control
-        team_1_num_frames = team_ball_control_till_frame[team_ball_control_till_frame==1].shape[0]
-        team_2_num_frames = team_ball_control_till_frame[team_ball_control_till_frame==2].shape[0]
-        team_1 = team_1_num_frames/(team_1_num_frames+team_2_num_frames)
-        team_2 = team_2_num_frames/(team_1_num_frames+team_2_num_frames)
+        team_ball_control_till_frame = team_ball_control[:frame_num + 1]
+        # Obtém o número de vezes que cada time teve o controle da bola
+        team_1_num_frames = team_ball_control_till_frame[team_ball_control_till_frame == 1].shape[0]
+        team_2_num_frames = team_ball_control_till_frame[team_ball_control_till_frame == 2].shape[0]
 
-        cv2.putText(frame, f"Team 1 Ball Control: {team_1*100:.2f}%",(1400,900), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 3)
-        cv2.putText(frame, f"Team 2 Ball Control: {team_2*100:.2f}%",(1400,950), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 3)
+        # Evita divisão por zero
+        total_frames = team_1_num_frames + team_2_num_frames
+        if total_frames > 0:
+            team_1 = team_1_num_frames / total_frames
+            team_2 = team_2_num_frames / total_frames
+        else:
+            team_1, team_2 = 0, 0
+
+        # Exibe a porcentagem de posse de bola
+        cv2.putText(frame, f"Team 1 Ball Control: {team_1 * 100:.2f}%", (1400, 900), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 3)
+        cv2.putText(frame, f"Team 2 Ball Control: {team_2 * 100:.2f}%", (1400, 950), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 3)
 
         return frame
 
