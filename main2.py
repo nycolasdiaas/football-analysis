@@ -9,7 +9,8 @@ import pickle
 
 def main():
     # Lê o vídeo
-    video_frames = read_video('input_videos/troca de passes.mp4')
+    # video_frames = read_video('input_videos/troca de passes.mp4')
+    video_frames = read_video('input_videos/3_0_input.mp4')
 
     # Inicializa o Tracker
     tracker = Tracker('models/best.pt')
@@ -17,7 +18,7 @@ def main():
     # Obtém os objetos rastreados
     tracks = tracker.get_object_tracks(video_frames,
                                        read_from_stub=False,
-                                       stub_path='stubs/track_stubs.pkl')
+                                       stub_path='stubs/track_stubs_with_teams.pkl')
     # Interpola posições da bola
     tracks["ball"] = tracker.interpolate_ball_positions(tracks["ball"])
     

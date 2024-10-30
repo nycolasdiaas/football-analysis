@@ -8,12 +8,11 @@ import cv2
 import sys
 sys.path.append('../')
 from utils import get_center_of_bbox, get_bbox_width
-from sort import Sort  # Importando o SORT
 
 class Tracker:
     def __init__(self, model_path):
         self.model = YOLO(model_path)
-        self.tracker = Sort()  # Substituindo ByteTrack pelo SORT
+        self.tracker = sv.ByteTrack()
     
     def interpolate_ball_positions(self, ball_positions):
         ball_positions = [x.get(1, {}).get('bbox', []) for x in ball_positions]
@@ -27,7 +26,7 @@ class Tracker:
         return ball_positions
             
     def detect_frames(self, frames):
-        batch_size = 100
+        batch_size = 20
         detections = []
         for i in range(0, len(frames), batch_size):
             detections_batch = self.model.predict(frames[i:i + batch_size], conf=0.10)
@@ -55,31 +54,29 @@ class Tracker:
             # Convert to supervision Detection format
             detection_supervision = sv.Detections.from_ultralytics(detection)
             
-            # Prepara as detecções para o SORT
-            detections_to_sort = []
-            for i, (bbox, class_id) in enumerate(zip(detection_supervision.xyxy, detection_supervision.class_id)):
-                detections_to_sort.append((bbox[0], bbox[1], bbox[2], bbox[3], cls_names[class_id]))  # x1, y1, x2, y2, class
-
-            # Rastreamento usando o SORT
-            track_bbs_ids = self.tracker.update(np.array(detections_to_sort))
+            # Convert GoalKeeper to player object
+            for object_ind, class_id in enumerate(detection_supervision.class_id):
+                if cls_names[class_id] == "goalkeeper":
+                    detection_supervision.class_id[object_ind] = cls_names_inv["player"]
+            
+            # Track Objects
+            detection_with_tracks = self.tracker.update_with_detections(detection_supervision)
             
             tracks["players"].append({})
             tracks["referees"].append({})
             tracks["ball"].append({})
             
-            for track in track_bbs_ids:
-                bbox = track[:4]  # x1, y1, x2, y2
-                track_id = int(track[4])  # ID do rastreamento
+            for frame_detection in detection_with_tracks:
+                bbox = frame_detection[0].tolist()
+                cls_id = frame_detection[3]
+                track_id = frame_detection[4]
 
-                # Verifica a classe do objeto
-                if track_id in detection_supervision.class_id:
-                    cls_id = detection_supervision.class_id[track_id]
-                    if cls_names[cls_id] == "player":
-                        tracks["players"][frame_num][track_id] = {"bbox": bbox}
-                    elif cls_names[cls_id] == "referee":
-                        tracks["referees"][frame_num][track_id] = {"bbox": bbox}
+                if cls_id == cls_names_inv['player']:
+                    tracks["players"][frame_num][track_id] = {"bbox": bbox}
+                
+                if cls_id == cls_names_inv['referee']:
+                    tracks["referees"][frame_num][track_id] = {"bbox": bbox}
             
-            # Adicionar lógica para rastreamento da bola
             for frame_detection in detection_supervision:
                 bbox = frame_detection[0].tolist()
                 cls_id = frame_detection[3]
@@ -198,6 +195,8 @@ class Tracker:
 
         return frame
 
+
+
     def draw_annotations(self, video_frames, tracks, team_ball_control):
         output_video_frames = []
         last_ball_position = None  # Variável para armazenar a última posição da bola
@@ -249,3 +248,4 @@ class Tracker:
             output_video_frames.append(frame)
             
         return output_video_frames
+
