@@ -5,6 +5,11 @@ __pycache__/
 
 *.mp4
 *.avi
+*.avi
+*.png
+*.pkl
+*.json
+*.gif
 
 # C extensions
 *.so

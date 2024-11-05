@@ -20,6 +20,7 @@ def main():
         # Lê o vídeo
         video_frames = read_video(os.path.join(video_folder, video_file))
         file_name = video_file.replace('.mp4', '')
+        
         # Obtém os objetos rastreados
         tracks = tracker.get_object_tracks(video_frames, read_from_stub=False,
                                            stub_path='stubs/track_stubs_with_teams.pkl')
@@ -37,6 +38,7 @@ def main():
                 team = team_assigner.get_player_team(video_frames[frame_num], track['bbox'], player_id)
                 tracks['players'][frame_num][player_id]['team'] = team
                 tracks['players'][frame_num][player_id]['team_color'] = team_assigner.teams_colors[team]
+                print(f"Jogador {player_id} no frame {frame_num}: time atribuído: {team}")  # Log para verificação
 
         # Atribuição de posse de bola
         player_assigner = PlayerBallAssigner()
@@ -58,6 +60,10 @@ def main():
         
         # Armazena os frames de saída
         all_output_frames.extend(output_video_frames)  # Adiciona os frames do vídeo atual à lista total
+
+        # Salva os dados dos jogadores em um arquivo .pkl após processar o vídeo atual
+        with open('stubs/track_stubs_with_teams.pkl', 'wb') as f:
+            pickle.dump(tracks, f)
 
         # Limpa a memória após processar cada vídeo
         del video_frames, tracks

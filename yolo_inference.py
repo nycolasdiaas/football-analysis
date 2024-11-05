@@ -1,8 +1,9 @@
 from ultralytics import YOLO
 
-model = YOLO('models/best.pt')
+# model = YOLO('models/generic/best.pt')
+model = YOLO('yolov8x')
 
-results = model.predict('discovery/input_videos/troca de passes.mp4', save=True)
+results = model.predict('input_videos/output_video_000.mp4', save=True)
 print(results[0])
 print('========================================')
 for box in results[0].boxes:
